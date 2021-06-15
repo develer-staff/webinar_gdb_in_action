@@ -1,0 +1,166 @@
+# CHAPTER 00 ... the crash
+g++ mwe.cpp -s -o exe
+ls
+# easy: just a constant...ok
+./mwe 100 1 
+# simple parable: seems ok...
+./mwe 100 1 0 0
+# ... but let just make sure the output number is ok by using a smaller interval
+./mwe 3 1 0 0
+# segfault!
+
+
+# CHAPTER 01 ... the despair
+ls
+# no coredump to help us!
+ulimit -a | grep core
+# indeed...core dump are disabled by default
+ulimit -c unlimited
+ulimit -c
+./mwe 3 1 0 0
+# now we should have a 'core' file
+ls
+gdb exe core
+bt
+# no much data to help us in our quest
+
+
+# CHAPTER 02 ... ray of hope
+# let's create an executable with debug symbols in it
+g++ mwe.cpp -g -o mwe
+# we can still use the previous "core" because the executable is still the same:
+# it just have some debug symbols in it!
+gdb exe core
+bt
+# now the backtrace makes some sense!
+
+
+# CHAPTER 03 ... better than before, but now what?
+gdb exe core
+bt
+# so it seems we are exploding when computing the Y value of a point:
+# let's track down which point
+frame 4
+info args
+p &max
+# we see that up to frame 2 we are using point "max"
+frame 2
+p this
+# indeed, it is point "max"
+ptype this
+# quick glance at its internals
+p this->_coefficients
+# coefficients seem ok!
+p this->_computer
+# and here there is something strange...it's parent it's not "this"
+frame 0
+info args
+# it's the same wrong "this": it is probably it's fault that we exploded...
+p this->_coefficients
+# these are not "our" coefficents....mh....
+# so something messed up our pointer, but what?
+
+
+# CHAPTER 04 ... let's BREAK free of this mess
+gdb exe
+# let's add some breakpoint to check what is happening at runtime
+# break at the function that trigger the explosion
+b print_results
+# break inside the loop so that we can inspect if we are initializing things in
+# a bad way
+b mwe.cpp:108
+# ...and automate some debug print so we don't have to manually type them
+commands
+p i
+p &interval[i] 
+p interval[i]._computer._parent
+p interval[i]._coefficients
+end
+run 3 1 0 0
+cont
+cont
+cont
+# everything ok
+p max
+cont
+# but then crash ... mh... something bad is happening between our 2 breakpoints!
+
+
+# CHAPTER 05 ... rerun tragedy
+# the problem with "debugging a live execution": every execution uses different
+# memory locations!
+./exe 3 1 0 0
+mv core core_01
+./exe 3 1 0 0
+mv core core_02
+ls
+gdb exe core_01
+info args
+bt
+q
+gdb exe core_02
+info args
+bt
+q
+# memory locations are different! however it seems that the bt is the same, so
+# the actual bug should be the same
+
+
+# CHAPTER 06 ... record execution with `rr`
+# but rr requires some setup...
+rr record exe 3 1 0 0
+# rr complains that our default traces are too paranoid?
+cat /proc/sys/kernel/perf_event_paranoid
+# yep, too paranoid, let's change that
+# but just this once, because I'm paranoid too to change its default value forever!
+sudo sh -c 'echo -1 >/proc/sys/kernel/perf_event_paranoid'
+# 'perf record' just because it also uses the same traces and it usually is
+# a little more verbose about what we are missing
+perf record
+# ...and indeed, chances are that our kerner is out of sync :(
+sudo apt-get install ...
+perf record
+# ok, perf is up and running correctly
+rr record exe 3 1 0 0
+# now everything seems to work! and we have a recorded execution inside 'rr'
+
+
+# CHAPTER 07 ... let's `rr`esolve this bug
+# list all the traces recorded by 'rr' and pick the one that we need
+rr ls
+rr replay exe-0
+# let's re-run everything up to the crash: let's remember the faulty pointer
+cont
+# just to know at which point in time we are...
+when
+bt
+frame 5
+info locals
+# need to point to the "everlasting memory location of max" because the symbol
+# 'max' is defined only locally at the current frame
+p &max
+watch (*((CurvePoint *) 0x<the value before>))._computer._parent
+info watchpoints
+# return to the top frame just to be sure (not sure if the "reverse continue"
+# works correctly even if we are in a random frame of the backtrace)
+frame 0
+reverse-continue
+# type reverse-continue a couple of time until we trigger the "watchpoint"
+# when we hit the watchpoint we see that we are changing the from the
+# "correct value of the pointer" to the bad value!
+when
+# let's print the backtrace to see which operation/line of code modify the
+# faulty pointer
+bt
+# TADA! it is sort that modify the pointer! 
+
+
+# CONCLUSION
+# RTFM! std::sort expects that the element of the vector to be "move assignable"
+# and the default 'CurvePoint::operator=' was broken due to how we designed its
+# internal structure!
+# Moreover, looking back at Chapter 00, we can actually see that even when it
+# didn't crash, the program was printing bad values for the "Y" coordinate,
+# problem is that that value was never under question when we run the program
+# and we assumed it was right (our focus was probably to the "value of the
+# integral", or at most at the "X" coordinate)!
