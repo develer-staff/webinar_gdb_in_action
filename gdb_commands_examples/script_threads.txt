@@ -1,0 +1,24 @@
+# compile and run gdb
+g++ -g commands_threads.cpp -lpthread -o exe6
+gdb exe6
+
+run
+# let's interrupt randomly out program
+<ctrl-c>
+
+# let's see what is happening...
+info threads
+# we see 3 threads
+
+# let's switch to thread 1
+thread 1
+backtrace
+# it seems that is waiting on a "join" ...so it is the "main thread" of our program
+
+# let's switch to thread 3
+thread 3
+backtrace
+# big backtrace...but mainly executing foo2, so this is our "t2" thread!
+
+quit
+yes

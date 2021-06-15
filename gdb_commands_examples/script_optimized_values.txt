@@ -1,0 +1,22 @@
+# compile and run gdb
+g++ -g commands_optimizedout.cpp -O1 -o exe5
+gdb exe5
+
+break commands_optimizedout.cpp:5
+break commands_optimizedout.cpp:12
+run
+
+# first watchpoint: we are inside function 'foo'
+info locals
+# we see that we have 2 local variables: 'b' and 'res' with their values
+
+continue
+# second watchpoint: always inside function 'foo'
+info locals
+# here we still see both the symbols 'b' and 'res'
+# however 'res' is "optimized out"...we cannot print or explore it:
+# at this point of code 'res' does not exist anymore because of the
+# optimization performed by the compiler!
+
+continue
+quit

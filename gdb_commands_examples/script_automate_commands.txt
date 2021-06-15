@@ -1,0 +1,24 @@
+# compile and run gdb
+g++ -g commands_optimizedout.cpp -o exe7
+gdb exe7
+
+break commands_optimizedout.cpp:8
+# let's add some custom print so that we don't have to type them every time
+# indeed we are interesting to see what happens inside the loop...
+# (note the "1" refers to the breakpoint we just created)
+commands 1
+print res
+print b
+end
+
+run
+# first time we hit the breakpoint and we see the value of the two variables
+# just at the start of the loop
+continue
+# we see how their values are changing
+continue 10
+# fast forward, after other 10 iterations we see different values
+
+delete 1
+continue
+quit

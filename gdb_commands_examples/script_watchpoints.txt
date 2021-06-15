@@ -1,0 +1,27 @@
+# compile and run gdb
+g++ -g commands_optimizedout.cpp -o exe2
+gdb exe2
+
+break main
+run
+watch res
+# bad! "res" is not defined in this scope...
+# let's move to the correct scope...
+break foo
+continue
+watch res
+# yep, now we are in the scope, even if res has yet to be initialized...
+# just to make sure we are currently watching "res"
+info watchpoint
+
+continue
+# triggered watchpoint: from not-initialized to initialized... it changed its value
+continue
+# triggered again the watchpoint: we are modifying its value inside the loop
+continue 10
+# just to skip fast forward...
+continue 20
+# and now we should have exited the scope and lost the watchpoint...
+# fair enough, again out of scope
+
+quit

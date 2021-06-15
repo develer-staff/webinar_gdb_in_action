@@ -1,0 +1,28 @@
+# compile and run gdb
+g++ -g commands_variables.cpp -o exe3
+gdb exe3
+
+# let's move where there is the variable
+break commands_variables.cpp:32
+run
+
+# let's check the "type" of my_var
+whatis my_var
+# let's print it
+print my_var
+# too messy...let's see how it is defined
+ptyle my_var
+# so the structure is much simpler than previously printed...
+# let's explore its internals in an interactive way
+explore my_var
+# so first level is just a container of other objects...let's inspect the first one
+0
+# and here we see the content of `c_1`: just 3 fields, and their values
+# correspond to what we printed before.
+# let's exit the "explore" command by pressing
+# a couple of time "return"
+<ret>
+<ret>
+
+continue
+quit

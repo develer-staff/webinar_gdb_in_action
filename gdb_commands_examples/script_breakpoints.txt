@@ -1,0 +1,23 @@
+# compile and run gdb
+g++ -g commands_stack.cpp -o exe1
+gdb exe1
+
+# breakpoint at a specific source code line
+break commands_stack.cpp:20
+# breakpoint at the start of a function
+break foo_2
+
+run
+
+# info about breakpoints: hit breakpoint 2
+info breakpoints
+# just delete breakpoint 2 since we don't need it anymore
+delete 2
+# make sure we deleted it
+info breakpoints
+
+continue
+# hit the first breakpoint
+
+continue
+quit

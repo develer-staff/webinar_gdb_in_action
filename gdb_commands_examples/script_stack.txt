@@ -1,0 +1,29 @@
+# compile and run gdb
+g++ -g commands_stack.cpp -o exe4
+gdb exe4
+
+# let's stop when the stack is interesting
+break commands_stack.cpp:5
+run
+
+# let's see the stack
+backtrace
+
+# move to frame 2: we are inside "foo_1"
+frame 2
+info locals
+# we see variable 'z' which will be fed to 'foo_2'
+info args
+# we see variable 'a' which has been received from 'main'
+
+# move to frame 3: we are inside "foo_2"
+frame 3
+info locals
+# we see variable 'w' which will be fed to 'foo_3'
+info args
+# we see variable 'b' which has been reveived from 'foo_1'...
+# indeed variable 'b' is indeed the same value we
+# encountered at "frame 2", but there it was called 'z'!
+
+continue
+quit
