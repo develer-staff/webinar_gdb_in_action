@@ -1,6 +1,13 @@
 # GDB in action
 
-Source code and materials for the webinar 16/06/2021 "GDB, cos'è e come utilizzarlo per fare debugging".
+Source code and data for the webinar 16/06/2021 "GDB, cos'è e come utilizzarlo per fare debugging".
+
+Source code files have been tested to work under Ubuntu 20.04 with these programs:
+
+* g++ (Ubuntu 9.3.0-17ubuntu1~20.04) 9.3.0
+* rr version 5.4.0
+* GNU gdb (Ubuntu 9.2-0ubuntu1~20.04) 9.2
+
 
 ## gdb commands examples folder
 
